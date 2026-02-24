@@ -1,0 +1,91 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import type { Board } from '@/lib/types';
+import { loadBoards, saveBoards, createBoard } from '@/lib/store';
+import Sidebar from '@/components/Sidebar';
+import BoardView from '@/components/BoardView';
+
+export default function Home() {
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const loaded = loadBoards();
+    setBoards(loaded);
+    if (loaded.length > 0) setActiveBoardId(loaded[0].id);
+    setMounted(true);
+  }, []);
+
+  const persist = useCallback((newBoards: Board[]) => {
+    setBoards(newBoards);
+    saveBoards(newBoards);
+  }, []);
+
+  const handleCreateBoard = (title: string) => {
+    const board = createBoard(title);
+    const newBoards = [...boards, board];
+    persist(newBoards);
+    setActiveBoardId(board.id);
+  };
+
+  const handleDeleteBoard = (id: string) => {
+    const newBoards = boards.filter(b => b.id !== id);
+    persist(newBoards);
+    if (activeBoardId === id) {
+      setActiveBoardId(newBoards.length > 0 ? newBoards[0].id : null);
+    }
+  };
+
+  const handleUpdateBoard = (updated: Board) => {
+    const newBoards = boards.map(b => b.id === updated.id ? updated : b);
+    persist(newBoards);
+  };
+
+  const activeBoard = boards.find(b => b.id === activeBoardId) || null;
+
+  if (!mounted) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="animate-pulse text-gray-500">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar
+        boards={boards}
+        activeBoardId={activeBoardId}
+        onSelectBoard={setActiveBoardId}
+        onCreateBoard={handleCreateBoard}
+        onDeleteBoard={handleDeleteBoard}
+      />
+      <main className="flex-1 flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
+        {activeBoard ? (
+          <>
+            <header className="px-6 py-4 flex items-center justify-between border-b border-gray-200/50 bg-white/50 backdrop-blur-sm">
+              <h2 className="text-xl font-bold text-gray-800">{activeBoard.title}</h2>
+              <div className="text-sm text-gray-500">
+                {activeBoard.columns.length} lists &middot;{' '}
+                {Object.keys(activeBoard.cards).length} cards
+              </div>
+            </header>
+            <BoardView board={activeBoard} onUpdate={handleUpdateBoard} />
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-600">No board selected</h3>
+              <p className="text-sm text-gray-400 mt-1">Create a board from the sidebar to get started</p>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
