@@ -8,6 +8,14 @@
 body {
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Use dvh for mobile viewport */
+@supports (height: 100dvh) {
+  body {
+    height: 100dvh;
+  }
 }
 
 /* Scrollbar styling for columns */
@@ -40,4 +48,10 @@ body {
 .overflow-x-auto::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
+}
+
+/* Touch-friendly: smooth momentum scrolling on iOS */
+.overflow-x-auto,
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }

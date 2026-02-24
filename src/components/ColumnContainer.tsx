@@ -50,7 +50,7 @@ export default function ColumnContainer({
 
   return (
     <div
-      className={`flex flex-col w-72 min-w-[288px] bg-gray-100 rounded-xl p-3 max-h-[calc(100vh-180px)] ${
+      className={`flex flex-col w-64 sm:w-72 min-w-[256px] sm:min-w-[288px] bg-gray-100 rounded-xl p-3 max-h-[calc(100dvh-140px)] sm:max-h-[calc(100dvh-180px)] shrink-0 ${
         isOver ? 'ring-2 ring-blue-400' : ''
       }`}
     >

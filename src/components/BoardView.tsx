@@ -6,6 +6,7 @@ import {
   DragOverlay,
   closestCorners,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
@@ -38,9 +39,13 @@ export default function BoardView({ board, onUpdate }: BoardViewProps) {
   const [addingColumn, setAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 5 },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 200, tolerance: 5 },
+  });
+  const sensors = useSensors(pointerSensor, touchSensor);
 
   const findColumnForCard = useCallback((cardId: string): string | null => {
     for (const col of board.columns) {
@@ -119,7 +124,7 @@ export default function BoardView({ board, onUpdate }: BoardViewProps) {
   const editingCard = editingCardId ? board.cards[editingCardId] : null;
 
   return (
-    <div className="flex-1 overflow-x-auto">
+    <div className="flex-1 overflow-x-auto overflow-y-hidden">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -127,7 +132,7 @@ export default function BoardView({ board, onUpdate }: BoardViewProps) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 p-6 items-start min-h-full">
+        <div className="flex gap-3 sm:gap-4 p-3 sm:p-6 items-start min-h-full">
           {board.columns.map(column => {
             const cards = column.cardIds
               .map(id => board.cards[id])
@@ -148,7 +153,7 @@ export default function BoardView({ board, onUpdate }: BoardViewProps) {
 
           {/* Add column button */}
           {addingColumn ? (
-            <div className="w-72 min-w-[288px] bg-gray-100 rounded-xl p-3">
+            <div className="w-64 sm:w-72 min-w-[256px] sm:min-w-[288px] bg-gray-100 rounded-xl p-3 shrink-0">
               <input
                 className="w-full text-sm border border-blue-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder="Enter list title..."
@@ -178,7 +183,7 @@ export default function BoardView({ board, onUpdate }: BoardViewProps) {
           ) : (
             <button
               onClick={() => setAddingColumn(true)}
-              className="w-72 min-w-[288px] bg-white/60 hover:bg-white/80 rounded-xl p-3 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors border border-dashed border-gray-300"
+              className="w-64 sm:w-72 min-w-[256px] sm:min-w-[288px] bg-white/60 hover:bg-white/80 rounded-xl p-3 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors border border-dashed border-gray-300 shrink-0"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -190,7 +195,7 @@ export default function BoardView({ board, onUpdate }: BoardViewProps) {
 
         <DragOverlay>
           {activeCard && (
-            <div className="bg-white rounded-lg shadow-lg border-2 border-blue-400 p-3 w-64 rotate-3">
+            <div className="bg-white rounded-lg shadow-lg border-2 border-blue-400 p-3 w-60 sm:w-64 rotate-3">
               <p className="text-sm font-medium text-gray-800">{activeCard.title}</p>
             </div>
           )}
