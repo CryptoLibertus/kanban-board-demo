@@ -1,22 +1,30 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useSyncExternalStore } from 'react';
 import type { Board } from '@/lib/types';
 import { loadBoards, saveBoards, createBoard } from '@/lib/store';
 import Sidebar from '@/components/Sidebar';
 import BoardView from '@/components/BoardView';
 
-export default function Home() {
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+function useHasMounted() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+}
 
-  useEffect(() => {
+export default function Home() {
+  const mounted = useHasMounted();
+  const [boards, setBoards] = useState<Board[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return loadBoards();
+  });
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
     const loaded = loadBoards();
-    setBoards(loaded);
-    if (loaded.length > 0) setActiveBoardId(loaded[0].id);
-    setMounted(true);
-  }, []);
+    return loaded.length > 0 ? loaded[0].id : null;
+  });
 
   const persist = useCallback((newBoards: Board[]) => {
     setBoards(newBoards);
